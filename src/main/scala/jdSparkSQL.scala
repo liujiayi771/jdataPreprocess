@@ -4,19 +4,22 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
 object jdSparkSQL {
-  private val projectPath = "/home/joey/Documents/projects/IdeaProjects/jdSparkSQL"
+  private val outputPath = "/Users/joey/Documents/projects/github/jdataPreprocess/data"
+  private val projectPath = "/Users/joey/Documents/projects/github/jdataPreprocess"
   private val userOrderPath = projectPath + "/data/jdata_user_order.csv"
   private val userActionPath = projectPath + "/data/jdata_user_action.csv"
   private val userCommentScore = projectPath + "/data/jdata_user_comment_score.csv"
+  private val skuBasicInfoPath = projectPath + "/data/jdata_sku_basic_info.csv"
+  private val userBasicInfoPath = projectPath + "/data/jdata_user_basic_info.csv"
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder()
-      .master("spark://joey:7077")
+      .master("local[2]")
       .appName("jdSparkSQL")
       .getOrCreate()
     val startDate = "2016-05-01"
     val endDate = "2017-01-31"
-    getUserCommentSumFeat(spark, startDate, endDate)
+    getUserBoughtOrNotEarliestDate(spark, startDate, endDate)
 
   }
 
@@ -51,7 +54,11 @@ object jdSparkSQL {
       .groupBy($"user_id")
       .agg(first($"o_area").as("o_area"), first($"maxCount").as("maxCount"))
 
-    resultDF.show(100)
+    resultDF.coalesce(1)
+      .write
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .csv("file://" + outputPath + "/area_feat.csv")
   }
 
   def getActionFeat(spark: SparkSession, startDate: String, endDate: String): Unit = {
@@ -68,7 +75,11 @@ object jdSparkSQL {
       .groupBy($"user_id")
       .agg(sum($"action_1").as("action_1"), sum($"action_2").as("action_2"))
 
-    df.show(100)
+    df.coalesce(1)
+      .write
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .csv("file://" + outputPath + "/action_feat.csv")
   }
 
   def getUserOrderSumFeat(spark: SparkSession, startDate: String, endDate: String): Unit = {
@@ -83,7 +94,11 @@ object jdSparkSQL {
       .groupBy($"user_id")
       .agg(sum($"o_sku_num").as("o_sku_sum"))
 
-    df.show(100)
+    df.coalesce(1)
+      .write
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .csv("file://" + outputPath + "/user_order_sum_feat.csv")
   }
 
   def getUserCommentSumFeat(spark: SparkSession, startDate: String, endDate: String): Unit = {
@@ -102,6 +117,37 @@ object jdSparkSQL {
       .groupBy($"user_id")
       .agg(sum($"score_level_1").as("score_level_1"), sum($"score_level_2").as("score_level_3"), sum($"score_level_1").as("score_level_2"))
 
-    df.show(100)
+    df.coalesce(1)
+      .write
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .csv("file://" + outputPath + "/user_comment_sum_feat.csv")
+  }
+
+  def getUserBoughtOrNotEarliestDate(spark: SparkSession, startDate: String, endDate: String): Unit = {
+    import spark.implicits._
+
+    val userOrderDF = spark.read
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .csv("file://" + userOrderPath)
+      .filter($"o_date".cast(DateType).between(startDate, endDate))
+
+    val userBasicInfoDF = spark.read
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .csv("file://" + userBasicInfoPath)
+
+    val df = userBasicInfoDF.join(userOrderDF, userBasicInfoDF("user_id") === userOrderDF("user_id"), "full_outer")
+      .select(userBasicInfoDF("user_id"), userOrderDF("o_date"))
+      .where($"o_date".isNotNull)
+      .groupBy($"user_id")
+      .agg(min($"o_date").as("earliest_date"))
+
+    df.coalesce(1)
+      .write
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .csv("file://" + outputPath + "/user_bought_or_not_earliest_date.csv")
   }
 }
