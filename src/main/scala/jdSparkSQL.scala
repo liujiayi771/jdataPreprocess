@@ -30,7 +30,8 @@ object jdSparkSQL {
       .option("header", "true")
       .option("inferSchema", "true")
       .csv("file://" + userOrderPath)
-      .filter($"o_date".cast(DateType).between(startDate, endDate))
+      .withColumn("o_date", col("o_date").cast(DateType))
+      .filter($"o_date".between(startDate, endDate))
       .select($"user_id", $"o_area")
 
 //    val countWindowSpec = Window.partitionBy($"user_id", $"o_area")
@@ -68,7 +69,8 @@ object jdSparkSQL {
       .option("header", "true")
       .option("inferSchema", "true")
       .csv("file://" + userActionPath)
-      .filter($"a_date".cast(DateType).between(startDate, endDate))
+      .withColumn("a_date", col("a_date").cast(DateType))
+      .filter($"a_date".between(startDate, endDate))
       .select($"user_id", $"a_num", $"a_type")
       .withColumn("action_1", when(col("a_type") === 1, col("a_num")).otherwise(0))
       .withColumn("action_2", when(col("a_type") === 2, col("a_num")).otherwise(0))
@@ -89,7 +91,8 @@ object jdSparkSQL {
       .option("header", "true")
       .option("inferSchema", "true")
       .csv("file://" + userOrderPath)
-      .filter($"o_date".cast(DateType).between(startDate, endDate))
+      .withColumn("o_date", col("o_date").cast(DateType))
+      .filter($"o_date".between(startDate, endDate))
       .select($"user_id", $"o_sku_num")
       .groupBy($"user_id")
       .agg(sum($"o_sku_num").as("o_sku_sum"))
@@ -108,7 +111,8 @@ object jdSparkSQL {
       .option("header", "true")
       .option("inferSchema", "true")
       .csv("file://" + userCommentScore)
-      .filter($"comment_create_tm".cast(DateType).between(startDate, endDate))
+      .withColumn("comment_create_tm", col("comment_create_tm").cast(DateType))
+      .filter($"comment_create_tm".between(startDate, endDate))
       .select($"user_id", $"score_level")
       .filter($"score_level" > 0)
       .withColumn("score_level_1", when(col("score_level") === 1, 1).otherwise(0))
@@ -131,7 +135,8 @@ object jdSparkSQL {
       .option("header", "true")
       .option("inferSchema", "true")
       .csv("file://" + userOrderPath)
-      .filter($"o_date".cast(DateType).between(startDate, endDate))
+      .withColumn("o_date", col("o_date").cast(DateType))
+      .filter($"o_date".between(startDate, endDate))
 
     val userBasicInfoDF = spark.read
       .option("header", "true")
@@ -144,10 +149,11 @@ object jdSparkSQL {
       .groupBy($"user_id")
       .agg(min($"o_date").as("earliest_date"))
 
-    df.coalesce(1)
-      .write
-      .option("header", "true")
-      .option("inferSchema", "true")
-      .csv("file://" + outputPath + "/user_bought_or_not_earliest_date.csv")
+    df.take(100).foreach(println)
+//    df.coalesce(1)
+//      .write
+//      .option("header", "true")
+//      .option("inferSchema", "true")
+//      .csv("file://" + outputPath + "/user_bought_or_not_earliest_date.csv")
   }
 }
