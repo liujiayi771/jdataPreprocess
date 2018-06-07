@@ -4,15 +4,27 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
 object jdSparkSQL {
-  private val outputPath = "/Users/joey/Documents/projects/github/jdataPreprocess/data"
-  private val projectPath = "/Users/joey/Documents/projects/github/jdataPreprocess"
-  private val userOrderPath = projectPath + "/data/jdata_user_order.csv"
-  private val userActionPath = projectPath + "/data/jdata_user_action.csv"
-  private val userCommentScore = projectPath + "/data/jdata_user_comment_score.csv"
-  private val skuBasicInfoPath = projectPath + "/data/jdata_sku_basic_info.csv"
-  private val userBasicInfoPath = projectPath + "/data/jdata_user_basic_info.csv"
+  private var outputPath = ""
+  private var dataPath = ""
+  private var userOrderPath = ""
+  private var userActionPath = ""
+  private var userCommentScore = ""
+  private var skuBasicInfoPath = ""
+  private var userBasicInfoPath = ""
 
   def main(args: Array[String]): Unit = {
+    if (args.length != 2) {
+      println("usage: program data_path output_path")
+      sys.exit(1)
+    }
+    dataPath = args(0)
+    outputPath = args(1)
+    userOrderPath = dataPath + "/jdata_user_order.csv"
+    userActionPath = dataPath + "/jdata_user_action.csv"
+    userCommentScore = dataPath + "/jdata_user_comment_score.csv"
+    skuBasicInfoPath = dataPath + "/jdata_sku_basic_info.csv"
+    userBasicInfoPath = dataPath + "/jdata_user_basic_info.csv"
+
     val spark = SparkSession.builder()
       .master("local[2]")
       .appName("jdSparkSQL")
@@ -147,11 +159,12 @@ object jdSparkSQL {
       .select(userBasicInfoDF("user_id"), userOrderDF("o_date"))
       .groupBy($"user_id")
       .agg(min($"o_date").as("earliest_date"))
-
-    df.coalesce(1)
-      .write
-      .option("header", "true")
-      .option("inferSchema", "true")
-      .csv("file://" + outputPath + "/user_bought_or_not_earliest_date.csv")
+      .withColumn("bought", when(col("earliest_date").isNull, 0).otherwise(1))
+    df.show(100)
+//    df.coalesce(1)
+//      .write
+//      .option("header", "true")
+//      .option("inferSchema", "true")
+//      .csv("file://" + outputPath + "/user_bought_or_not_earliest_date.csv")
   }
 }
