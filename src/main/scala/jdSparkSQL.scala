@@ -160,11 +160,11 @@ object jdSparkSQL {
       .groupBy($"user_id")
       .agg(min($"o_date").as("earliest_date"))
       .withColumn("bought", when(col("earliest_date").isNull, 0).otherwise(1))
-    df.show(100)
-//    df.coalesce(1)
-//      .write
-//      .option("header", "true")
-//      .option("inferSchema", "true")
-//      .csv("file://" + outputPath + "/user_bought_or_not_earliest_date.csv")
+
+    df.coalesce(1)
+      .write
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .csv("file://" + outputPath + "/user_bought_or_not_earliest_date.csv")
   }
 }
