@@ -1,4 +1,4 @@
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.expressions._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
@@ -69,6 +69,7 @@ object jdSparkSQL {
 
     resultDF.coalesce(1)
       .write
+      .mode(SaveMode.Overwrite)
       .option("header", "true")
       .option("inferSchema", "true")
       .csv("file://" + outputPath + "/area_feat.csv")
@@ -91,6 +92,7 @@ object jdSparkSQL {
 
     df.coalesce(1)
       .write
+      .mode(SaveMode.Overwrite)
       .option("header", "true")
       .option("inferSchema", "true")
       .csv("file://" + outputPath + "/action_feat.csv")
@@ -111,6 +113,7 @@ object jdSparkSQL {
 
     df.coalesce(1)
       .write
+      .mode(SaveMode.Overwrite)
       .option("header", "true")
       .option("inferSchema", "true")
       .csv("file://" + outputPath + "/user_order_sum_feat.csv")
@@ -135,6 +138,7 @@ object jdSparkSQL {
 
     df.coalesce(1)
       .write
+      .mode(SaveMode.Overwrite)
       .option("header", "true")
       .option("inferSchema", "true")
       .csv("file://" + outputPath + "/user_comment_sum_feat.csv")
@@ -163,6 +167,7 @@ object jdSparkSQL {
 
     df.coalesce(1)
       .write
+      .mode(SaveMode.Overwrite)
       .option("header", "true")
       .option("inferSchema", "true")
       .csv("file://" + outputPath + "/user_bought_or_not_earliest_date.csv")
