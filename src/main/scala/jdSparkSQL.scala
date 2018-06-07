@@ -145,15 +145,13 @@ object jdSparkSQL {
 
     val df = userBasicInfoDF.join(userOrderDF, userBasicInfoDF("user_id") === userOrderDF("user_id"), "full_outer")
       .select(userBasicInfoDF("user_id"), userOrderDF("o_date"))
-      .where($"o_date".isNotNull)
       .groupBy($"user_id")
       .agg(min($"o_date").as("earliest_date"))
 
-    df.take(100).foreach(println)
-//    df.coalesce(1)
-//      .write
-//      .option("header", "true")
-//      .option("inferSchema", "true")
-//      .csv("file://" + outputPath + "/user_bought_or_not_earliest_date.csv")
+    df.coalesce(1)
+      .write
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .csv("file://" + outputPath + "/user_bought_or_not_earliest_date.csv")
   }
 }
