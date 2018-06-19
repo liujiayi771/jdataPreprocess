@@ -29,13 +29,17 @@ object jdSparkSQL {
       .master("local[2]")
       .appName("jdSparkSQL")
       .getOrCreate()
-    val startDate = "2016-05-01"
-    val endDate = "2017-01-31"
-    val areaFeatDF = getAreaFeat(spark, startDate, endDate)
-    val actionFeatDF = getActionFeat(spark, startDate, endDate)
-    val userOrderSumFeatDF = getUserOrderSumFeat(spark, startDate, endDate)
-    val userCommentSumFeatDF = getUserCommentSumFeat(spark, startDate, endDate)
-    val userBoughtOrNotEarliestDateDF = getUserBoughtOrNotEarliestDate(spark, startDate, endDate)
+    val f_startDate = "2016-07-01"
+    val f_endDate = "2017-04-01"
+
+    val l_startDate = "2017-04-01"
+    val l_endDate = "2017-05-01"
+
+    val areaFeatDF = getAreaFeat(spark, f_startDate, f_endDate)
+    val actionFeatDF = getActionFeat(spark, f_startDate, f_endDate)
+    val userOrderSumFeatDF = getUserOrderSumFeat(spark, f_startDate, f_endDate)
+    val userCommentSumFeatDF = getUserCommentSumFeat(spark, f_startDate, f_endDate)
+    val userBoughtOrNotEarliestDateDF = getUserBoughtOrNotEarliestDate(spark, l_startDate, l_endDate)
 
     import spark.implicits._
 
@@ -53,14 +57,14 @@ object jdSparkSQL {
       .mode(SaveMode.Overwrite)
       .option("header", "true")
       .option("inferSchema", "true")
-      .csv("file://" + outputPath + "/feat_" + startDate + "_" + endDate)
+      .csv("file://" + outputPath + "/feat_" + f_startDate + "_" + f_endDate)
 
     labelDF.coalesce(1)
       .write
       .mode(SaveMode.Overwrite)
       .option("header", "true")
       .option("inferSchema", "true")
-      .csv("file://" + outputPath + "/label_" + startDate + "_" + endDate)
+      .csv("file://" + outputPath + "/label_" + l_startDate + "_" + l_endDate)
 
   }
 
